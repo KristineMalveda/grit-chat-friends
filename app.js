@@ -34,7 +34,7 @@ refreshbutton.addEventListener("click", () =>{
           (peerId) => 
             peerId !== myPeerId) 
            
-        .map((peerId) => {
+        .forEach((peerId) => {
           console.log(peerId);
           const li = document.createElement("li");
           const button = document.createElement("button");
