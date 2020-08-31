@@ -40,7 +40,8 @@
     console.log(peerId);
     conn.on('open', () => {
 
-      console.log("connection open");
+    console.log("connection open");
+    //create a custom event
       const event = new CustomEvent('peer-changed', { 
         detail: {
             peerId: peerId
@@ -48,6 +49,8 @@
         });
       document.dispatchEvent(event);
     });
+
+
     conn.on("error", consoleLog);
   };
   //Refresh button eventlistener - shows the list of peers/users 
@@ -86,8 +89,8 @@
       const peerAddClass = ".peerId-" + peerId; 
       let peerRemoveConn = ".connect-button.connected";
       //remove class
-    document.querySelectorAll(peerRemoveConn).forEach ((el) =>{
-      el.classList.remove('connected');
+    document.querySelectorAll(peerRemoveConn).forEach ((connectedPeer) =>{
+      connectedPeer.classList.remove('connected');
     }); 
       //add connected class  
       document.querySelector(peerAddClass).classList.add('connected');  
