@@ -1,5 +1,4 @@
-- //self invoked anonymous function
-
+//self invoked anonymous function
 //Global variable 
 (function () { //wrap application in a function
 
@@ -89,29 +88,28 @@
 
       conn.on("data", (data) => {
         console.log(data);
-        //  let them = messagesWrapperDiv.classList.add("them");
         printMessage(data, "them");
       });
     });
     conn.on("error", consoleLog);
   };
 
-
   //Implement print message function
   let printMessage = (message, user) => {
-    const messagesDiv = document.querySelector(".messages");
-    const messagesWrapperDiv = document.createElement("div");
-    const newMessageDiv = document.createElement("div");
-    newMessageDiv.innerText = message;
-    messagesWrapperDiv.classList.add("message");
-    messagesWrapperDiv.appendChild(newMessageDiv);
-    messagesDiv.appendChild(messagesWrapperDiv);
+    let today = new Date();
+    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 
-    if (user === "me") {
-    messagesWrapperDiv.classList.add("me"); 
-    } else if (user === "them") {
-      messagesWrapperDiv.classList.add("them");
-    }
+    const msgDiv = document.querySelector(".messages");
+    const msgsWrapperDiv = document.createElement("div");
+    const newMsgDiv = document.createElement("div");
+    //added time with the message
+    newMsgDiv.innerText = time + ": " + message;
+
+    msgsWrapperDiv.classList.add("message");
+    msgsWrapperDiv.classList.add(user);
+    msgsWrapperDiv.appendChild(newMsgDiv);
+    msgDiv.appendChild(msgsWrapperDiv);
+
   }
 
   //Refresh button eventlistener - shows the list of peers/users 
@@ -150,27 +148,29 @@
     console.log('peerId:', peerId);
     const peerAddClass = ".peerId-" + peerId;
     let peerRemoveConn = ".connect-button.connected";
+    let connectedClass = document.querySelector(peerAddClass);
     //remove class
     document.querySelectorAll(peerRemoveConn).forEach((connectedPeer) => {
       connectedPeer.classList.remove('connected');
     });
-    //add connected class  
-    document.querySelector(peerAddClass) && document.querySelector(peerAddClass).classList.add('connected');
 
+    connectedClass && connectedClass.classList.add('connected');
   })
 
 
   //event listener på send button 
   const sendBtn = document.querySelector(".send-new-message-button");
   sendBtn.addEventListener('click', () => {
+
     //implement send message 
     let message = document.querySelector(".new-message").value;
     console.log(message);
     conn.send(message);
     console.log(conn.peer);
-    
+
     //print message
     printMessage(message, "me");
+    //clear the input field once you send the message
     message = document.querySelector(".new-message").value = " ";
   });
 
