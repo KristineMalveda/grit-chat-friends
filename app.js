@@ -6,10 +6,11 @@
 
   let peer = null;
   let conn = null;
-  const consoleLog = (e) => {
-    console.log(e);
-  };
+  let mediaConn = null;
 
+  const consoleLog = (e) =>{
+    console.log(e);
+  }
   //handle peer events
   const peerOnOpen = (id) => {
     document.querySelector(".my-peer-id").innerHTML = id;
@@ -35,6 +36,24 @@
       },
     });
     document.dispatchEvent(event);
+  };
+
+  //on peer event "call" : when the'yre calling you
+  const peerOnCall = (incomingCall) => {
+   // if(confirm(`Answer Call from ${incomingCall.peer}?`)) {
+    mediaConn && mediaConn.close();
+    //Answering incoming call
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: false,
+        video: true,
+      })
+      .then((myStream) => {
+        mediaConn = incomingCall;
+        incomingCall.answer(myStream);
+        mediaConn.on("stream", mediaConnOnStream);
+      });
+    //}
   };
 
   //*Location object : random id if the hash location is not defined
@@ -71,6 +90,9 @@
   //connection
   peer.on("connection", peerOnConnection);
 
+  //call connection
+  peer.on("call", peerOnCall);
+
   //connect to peer
   const connectToPeerClick = (el) => {
     const peerId = el.target.textContent;
@@ -93,7 +115,11 @@
         printMessage(data, "them");
       });
     });
-    conn.on("error", consoleLog);
+     conn.on("error", consoleLog);
+
+    //update video subtext
+    const video = document.querySelector(".video-container.them");
+    video.querySelector(".name").innerText = peerId;
   };
 
   //Implement print message function
@@ -112,6 +138,8 @@
     msgsWrapperDiv.classList.add(user);
     msgsWrapperDiv.appendChild(newMsgDiv);
     msgDiv.appendChild(msgsWrapperDiv);
+
+    msgDiv.scrollTo(0, msgDiv.scrollHeight);
   };
 
   //Refresh button eventlistener - shows the list of peers/users
@@ -153,35 +181,101 @@
     document.querySelectorAll(peerRemoveConn).forEach((connectedPeer) => {
       connectedPeer.classList.remove("connected");
     });
-
     connectedClass && connectedClass.classList.add("connected");
+
+    //update video subtext
+    const video = document.querySelector(".video-container.them");
+    video.querySelector(".name").innerText = peerId;
+    video.classList.add("connected");
+    video.querySelector(".stop").classList.remove("active");
+    video.querySelector(".start").classList.add("active");
   });
 
   let myMessage = document.querySelector(".new-message");
   const sendBtn = document.querySelector(".send-new-message-button");
 
-
   const sendMyMessage = () => {
     //implement send message
+
     let message = myMessage.value;
-    console.log(message);
-    conn.send(message);
-    console.log(conn.peer);
-    
-    //print message
-    printMessage(message, "me");
-    //clear the input field once you send the message
-    message = document.querySelector(".new-message").value = " ";
+    //Forbidding from sending empty messages
+    if (!message || message.trim().length === 0) {
+      alert("A message is required.");
+    } else {
+      // Send your messag
+      conn.send(message);
+      console.log(conn.peer);
+      //print message
+      printMessage(message, "me");
+      //clear the input field once you send the message
+      message = document.querySelector(".new-message").value = " ";
     }
-  
+  };
+
+  //Display video of me
+  navigator.mediaDevices
+    .getUserMedia({
+      audio: false,
+      video: true,
+    })
+    .then((stream) => {
+      const video = document.querySelector(".video-container.me video");
+      video.muted = true;
+      video.srcObject = stream;
+    });
+
+  //start video
+  const startVideoCallClick = () => {
+    console.log("startVideo");
+    const video = document.querySelector(".video-container.them");
+    const startButton = video.querySelector(".start");
+    const stopButton = video.querySelector(".stop");
+    startButton.classList.remove("active");
+    stopButton.classList.add("active");
+
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: false,
+        video: true,
+      })
+      .then((myStream) => {
+        mediaConn && mediaConn.close();
+        mediaConn = peer.call(conn.peer, myStream);
+        mediaConn.on("stream", mediaConnOnStream); 
+      });
+  };
+
+  document
+    .querySelector(".video-container.them .start")
+    .addEventListener("click", startVideoCallClick);
+
+  const mediaConnOnStream = (theirStream) => {
+    const video = document.querySelector(".video-container.them video");
+    video.muted = true;
+    video.srcObject = theirStream;
+  };
+
+  //Stop video click handler
+  const StopVideoCallClick = () => {
+    mediaConn && mediaConn.close();
+    const video = document.querySelector(".video-container.them");
+    const startButton = video.querySelector(".start");
+    const stopButton = video.querySelector(".stop");
+    stopButton.classList.remove("active");
+    startButton.classList.add("active");
+  };
+
+  document
+    .querySelector(".video-container.them .stop")
+    .addEventListener("click", StopVideoCallClick);
+
+  //sending message once enter is pressed
   myMessage.addEventListener("keyup", (event) => {
     if (event.keyCode === 13) {
       event.preventDefault();
       sendMyMessage();
-      
-       }
-    });
- 
-  sendBtn.addEventListener("click", sendMyMessage);
+    }
+  });
 
+  sendBtn.addEventListener("click", sendMyMessage);
 })();
