@@ -8,9 +8,9 @@
   let conn = null;
   let mediaConn = null;
 
-  const consoleLog = (e) =>{
+  const consoleLog = (e) => {
     console.log(e);
-  }
+  };
   //handle peer events
   const peerOnOpen = (id) => {
     document.querySelector(".my-peer-id").innerHTML = id;
@@ -40,12 +40,12 @@
 
   //on peer event "call" : when the'yre calling you
   const peerOnCall = (incomingCall) => {
-   // if(confirm(`Answer Call from ${incomingCall.peer}?`)) {
+    // if(confirm(`Answer Call from ${incomingCall.peer}?`)) {
     mediaConn && mediaConn.close();
     //Answering incoming call
     navigator.mediaDevices
       .getUserMedia({
-        audio: false,
+        audio: true,
         video: true,
       })
       .then((myStream) => {
@@ -115,7 +115,7 @@
         printMessage(data, "them");
       });
     });
-     conn.on("error", consoleLog);
+    conn.on("error", consoleLog);
 
     //update video subtext
     const video = document.querySelector(".video-container.them");
@@ -194,11 +194,10 @@
   let myMessage = document.querySelector(".new-message");
   const sendBtn = document.querySelector(".send-new-message-button");
 
+  //implement send message
   const sendMyMessage = () => {
-    //implement send message
-
     let message = myMessage.value;
-    //Forbidding from sending empty messages
+    //Forbid from sending empty messages
     if (!message || message.trim().length === 0) {
       alert("A message is required.");
     } else {
@@ -220,11 +219,11 @@
     })
     .then((stream) => {
       const video = document.querySelector(".video-container.me video");
-      video.muted = true;
+      video.muted = false;
       video.srcObject = stream;
     });
 
-  //start video
+  //start video handler
   const startVideoCallClick = () => {
     console.log("startVideo");
     const video = document.querySelector(".video-container.them");
@@ -237,11 +236,11 @@
       .getUserMedia({
         audio: false,
         video: true,
-      })
+      }) //promise
       .then((myStream) => {
-        mediaConn && mediaConn.close();
+        mediaConn && mediaConn.answer();
         mediaConn = peer.call(conn.peer, myStream);
-        mediaConn.on("stream", mediaConnOnStream); 
+        mediaConn.on("stream", mediaConnOnStream);
       });
   };
 
@@ -257,14 +256,29 @@
 
   //Stop video click handler
   const StopVideoCallClick = () => {
-    mediaConn && mediaConn.close();
+    console.log("Stop the video");
+    //mediaConn && mediaConn.close();
     const video = document.querySelector(".video-container.them");
     const startButton = video.querySelector(".start");
     const stopButton = video.querySelector(".stop");
     stopButton.classList.remove("active");
     startButton.classList.add("active");
+
+    navigator.mediaDevices
+      .getUserMedia({
+        video: true,
+        audio: false,
+      })
+      .then(() => {
+        //close connection
+        mediaConn && mediaConn.close();
+        //turn off the camera
+        const video = document.querySelector(".video-container.them video");
+        video.srcObject = null;
+      });
   };
 
+  //listener to hang up button
   document
     .querySelector(".video-container.them .stop")
     .addEventListener("click", StopVideoCallClick);
@@ -276,6 +290,6 @@
       sendMyMessage();
     }
   });
-
+  //listener to send message button
   sendBtn.addEventListener("click", sendMyMessage);
 })();
