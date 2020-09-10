@@ -272,9 +272,6 @@
       .then(() => {
         //close connection
         mediaConn && mediaConn.close();
-        //turn off the camera
-        const video = document.querySelector(".video-container.them video");
-        video.srcObject = null;
       });
   };
 
