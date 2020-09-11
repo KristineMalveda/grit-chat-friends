@@ -257,22 +257,12 @@
   //Stop video click handler
   const StopVideoCallClick = () => {
     console.log("Stop the video");
-    //mediaConn && mediaConn.close();
+    mediaConn && mediaConn.close();
     const video = document.querySelector(".video-container.them");
     const startButton = video.querySelector(".start");
     const stopButton = video.querySelector(".stop");
     stopButton.classList.remove("active");
     startButton.classList.add("active");
-
-    navigator.mediaDevices
-      .getUserMedia({
-        video: true,
-        audio: false,
-      })
-      .then(() => {
-        //close connection
-        mediaConn && mediaConn.close();
-      });
   };
 
   //listener to hang up button
